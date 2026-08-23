@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinTrack - Financial Planning Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .gold-card { background: linear-gradient(135deg, #FFFDF0 0%, #FFF5D6 100%); border-color: #D4AF37; }
+    .gold-text { color: #B8860B; }
+    .profit-card { background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border-color: #10B981; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-center text-white">
+        <div class="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl text-slate-900 text-2xl font-black transform rotate-3">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h1 class="text-3xl font-black tracking-wider uppercase">FinTrack</h1>
+        <p class="text-xs text-amber-400 font-semibold tracking-widest mt-1 uppercase">Financial Planning & Portfolio</p>
+      </div>
+      <form id="loginForm" class="p-6 space-y-4" onsubmit="handleLogin(event)">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Login ID</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-user"></i></span>
+            <input type="text" id="loginId" value="US" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-lock"></i></span>
+            <input type="password" id="loginPass" value="12345678" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-sm">
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="rememberMe" checked class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+            <span class="text-slate-600 font-medium">Remember Password</span>
+          </label>
+        </div>
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition-all">
+          Access FinTrack <i class="fa-solid fa-arrow-right ml-1"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="appContainer" class="hidden min-h-screen flex flex-col flex-grow">
+    
+    <!-- TOP HEADER WITH DUAL NAVIGATION -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        
+        <div class="flex items-center space-x-3">
+          <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+          
+          <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-slate-900 font-black shadow-lg">FT</div>
+          <div>
+            <h1 class="font-black text-lg leading-tight uppercase tracking-wider hidden sm:block">FinTrack</h1>
+          </div>
+
+          <!-- LINEAR TOP NAVIGATION (Desktop) -->
+          <nav class="hidden lg:flex items-center space-x-1 ml-4 bg-slate-800/50 p-1 rounded-lg">
+            <button onclick="switchTab('overview')" id="top-tab-overview" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold bg-indigo-600 text-white transition">Overview</button>
+            <button onclick="switchTab('expenses')" id="top-tab-expenses" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Expenses</button>
+            <button onclick="switchTab('liabilities')" id="top-tab-liabilities" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Liabilities</button>
+            <button onclick="switchTab('gold-sip')" id="top-tab-gold-sip" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Gold & SIP</button>
+          </nav>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <!-- Live Remittance Rate Bar -->
+          <div class="flex items-center bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700 space-x-2">
+            <i class="fa-solid fa-globe text-emerald-400 animate-pulse text-xs"></i>
+            <span class="text-xs font-semibold text-slate-300 hidden md:inline">SAR / INR:</span>
+            <div class="flex items-center space-x-1">
+              <span class="text-xs font-bold text-emerald-400">₹</span>
+              <input type="number" step="0.01" id="liveRateInput" onchange="updateExchangeRate(this.value)" class="w-16 px-1.5 py-0.5 bg-slate-900 border border-slate-600 text-emerald-400 font-bold rounded text-xs text-center outline-none focus:border-emerald-400">
+            </div>
+          </div>
+
+          <button onclick="handleLogout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition">
+            <i class="fa-solid fa-right-from-bracket md:mr-1"></i> <span class="hidden md:inline">Logout</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- LAYOUT BODY WITH SIDEBAR -->
+    <div class="flex flex-grow relative">
+      
+      <!-- SIDEBAR DRAWER -->
+      <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 transition-all duration-300 z-20 flex flex-col border-r border-slate-800 hidden lg:flex">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Navigation</span>
+          <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white lg:hidden"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="p-3 space-y-1 flex-grow">
+          <button onclick="switchTab('overview')" id="side-tab-overview" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center space-x-3 transition">
+            <i class="fa-solid fa-chart-pie w-5 text-center"></i><span>Financial Overview</span>
+          </button>
+          <button onclick="switchTab('expenses')" id="side-tab-expenses" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3 transition">
+            <i class="fa-solid fa-calendar-days w-5 text-center"></i><span>Monthly Expenses</span>
+          </button>
+          <button onclick="switchTab('liabilities')" id="side-tab-liabilities" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3 transition">
+            <i class="fa-solid fa-hand-holding-dollar w-5 text-center"></i><span>Liabilities & Debts</span>
+          </button>
+          <button onclick="switchTab('gold-sip')" id="side-tab-gold-sip" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3 transition">
+            <i class="fa-solid fa-coins w-5 text-center"></i><span>Gold & SIP Investments</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="flex-grow p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
+
+        <!-- SECTION 1: FINANCIAL OVERVIEW -->
+        <section id="sec-overview" class="tab-content space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Liquid Bank Balance</p>
+              <h3 class="text-2xl font-black text-slate-800 mt-2" id="sumBankBalance">₹0</h3>
+              <p class="text-xs text-slate-500 mt-1">India + Saudi Banks Combined</p>
+            </div>
+            <div class="bg-red-50 p-5 rounded-xl border border-red-200 shadow-sm">
+              <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Total Liabilities (Real-Time)</p>
+              <h3 class="text-2xl font-black text-red-700 mt-2" id="sumTotalDebts">₹0</h3>
+              <p class="text-xs text-red-600/80 mt-1">Remaining Debt Principal</p>
+            </div>
+            <div class="gold-card p-5 rounded-xl border shadow-sm">
+              <p class="text-xs font-bold gold-text uppercase tracking-wider">Total Savings & Gold</p>
+              <h3 class="text-2xl font-black text-amber-600 mt-2" id="sumGoldSip">₹0</h3>
+              <p class="text-xs text-amber-700/80 mt-1">Gold Today's Value + SIP</p>
+            </div>
+            <div class="profit-card p-5 rounded-xl border shadow-sm">
+              <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Net Financial Balance</p>
+              <h3 class="text-2xl font-black text-emerald-600 mt-2" id="sumNetPosition">₹0</h3>
+              <p class="text-xs text-emerald-700/80 mt-1">Liquid Bank + Savings - Debt</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-800 flex items-center"><i class="fa-solid fa-building-columns text-indigo-600 mr-2"></i> Indian Bank Balances (INR ₹)</h3>
+                <button onclick="openForm('modalBank', 'bankForm', {currency: 'INR'})" class="px-3 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold text-xs rounded-lg transition">
+                  + Add Bank
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="text-slate-400 border-b">
+                      <th class="pb-2">Bank Name</th>
+                      <th class="pb-2 text-right">Balance (₹)</th>
+                      <th class="pb-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="indianBanksTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-800 flex items-center"><i class="fa-solid fa-vault text-amber-600 mr-2"></i> Saudi Bank Balances (SAR)</h3>
+                <button onclick="openForm('modalBank', 'bankForm', {currency: 'SAR'})" class="px-3 py-1 bg-amber-50 text-amber-600 hover:bg-amber-100 font-bold text-xs rounded-lg transition">
+                  + Add Bank
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="text-slate-400 border-b">
+                      <th class="pb-2">Bank Name</th>
+                      <th class="pb-2 text-right">Balance (SAR)</th>
+                      <th class="pb-2 text-right">In INR (₹)</th>
+                      <th class="pb-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="saudiBanksTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: MONTHLY EXPENSES -->
+        <section id="sec-expenses" class="tab-content hidden space-y-6">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Monthly Shared Expense Tracker</h3>
+                <p class="text-xs text-slate-500">Real-time tracker. Logs update instantly upon saving.</p>
+              </div>
+              <div class="flex items-center space-x-3">
+                <label class="text-xs font-bold text-slate-600 uppercase">Month:</label>
+                <select id="expenseMonthSelect" onchange="renderExpenses()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-xs text-slate-700 outline-none">
+                  <option value="2026-08">August 2026</option>
+                  <option value="2026-09">September 2026</option>
+                  <option value="2026-10">October 2026</option>
+                  <option value="2026-11">November 2026</option>
+                  <option value="2026-12">December 2026</option>
+                </select>
+                <button onclick="openNewExpenseModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow">
+                  + Add Expense
+                </button>
+              </div>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- SAR Block -->
+              <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                <div class="flex justify-between border-b border-amber-200 pb-2 mb-2">
+                  <span class="text-xs font-bold text-amber-800">SAR Expenses Logged:</span>
+                  <span class="text-xs font-black text-amber-900" id="totalSARLogged">0 SAR</span>
+                </div>
+                <div class="flex justify-between text-xs text-amber-700 mb-4">
+                  <span>Fazy paid: <b id="fazySARPaid">0</b></span>
+                  <span>Juby paid: <b id="jubySARPaid">0</b></span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <p class="text-xs font-bold text-slate-500 uppercase">SAR Settlement Due</p>
+                  <button onclick="openSettlementForm('SAR')" class="px-3 py-1 bg-amber-500 text-white text-[10px] font-bold rounded shadow hover:bg-amber-600">Log SAR Payment</button>
+                </div>
+                <h4 class="text-lg font-black text-amber-700 mt-1" id="expStatusSAR">Settled</h4>
+              </div>
+
+              <!-- INR Block -->
+              <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                <div class="flex justify-between border-b border-indigo-200 pb-2 mb-2">
+                  <span class="text-xs font-bold text-indigo-800">INR Expenses Logged:</span>
+                  <span class="text-xs font-black text-indigo-900" id="totalINRLogged">₹0</span>
+                </div>
+                <div class="flex justify-between text-xs text-indigo-700 mb-4">
+                  <span>Fazy paid: <b id="fazyINRPaid">0</b></span>
+                  <span>Juby paid: <b id="jubyINRPaid">0</b></span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <p class="text-xs font-bold text-slate-500 uppercase">INR (₹) Settlement Due</p>
+                  <button onclick="openSettlementForm('INR')" class="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded shadow hover:bg-indigo-700">Log INR Payment</button>
+                </div>
+                <h4 class="text-lg font-black text-indigo-700 mt-1" id="expStatusINR">Settled</h4>
+              </div>
+
+            </div>
+
+            <!-- EXPENSES TABLE -->
+            <div class="overflow-x-auto border rounded-lg border-slate-200">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                    <th class="p-3">Date</th>
+                    <th class="p-3">Description</th>
+                    <th class="p-3 text-center">Paid By</th>
+                    <th class="p-3 text-right">Amount</th>
+                    <th class="p-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="expensesTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+
+            <!-- SETTLEMENT LOGS TABLE -->
+            <div class="mt-6 border-t pt-4">
+              <h4 class="font-bold text-slate-800 text-sm mb-2"><i class="fa-solid fa-clock-rotate-left mr-1 text-slate-400"></i> Settlement Transfer Logs</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs bg-slate-50 rounded-lg">
+                  <tbody id="settlementsTable" class="divide-y divide-slate-200 text-slate-600"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: LIABILITIES & DEBTS -->
+        <section id="sec-liabilities" class="tab-content hidden space-y-6">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-4">
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Liabilities & Debt Management</h3>
+                <p class="text-xs text-slate-500">Track loan payments with exact dates, logs, and closing status.</p>
+              </div>
+              <button onclick="openForm('modalDebt', 'debtForm')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg shadow">
+                + Add New Debt
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="debtsContainer"></div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: GOLD & SIP INVESTMENTS -->
+        <section id="sec-gold-sip" class="tab-content hidden space-y-6">
+          
+          <div class="gold-card p-5 rounded-xl border shadow-sm space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-amber-200 pb-4">
+              <div>
+                <h3 class="font-black text-amber-900 text-base flex items-center">
+                  <i class="fa-solid fa-coins text-amber-500 mr-2"></i> Gold Purchase & Dual Conversion Analysis
+                </h3>
+                <p class="text-xs text-amber-800 mt-1">Compare physical gold value vs purchase-day conversion rate & live today conversion rate.</p>
+              </div>
+              <button onclick="openForm('modalGold', 'goldForm')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg shadow">
+                + Add Gold Purchase
+              </button>
+            </div>
+
+            <!-- SUMMARY CARDS -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 bg-white/80 p-4 rounded-xl border border-amber-200/60 shadow-xs">
+              <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Total SAR Invested</p>
+                <h4 class="text-base md:text-lg font-black text-slate-800" id="goldSummarySar">0 SAR</h4>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-amber-700 uppercase">Purchase Day Conv. Total</p>
+                <h4 class="text-base md:text-lg font-black text-amber-800" id="goldSummaryPurchaseInr">₹0</h4>
+                <p class="text-[9px] text-amber-600/80">Based on purchase day rates</p>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-indigo-700 uppercase">Converted Today (Live)</p>
+                <h4 class="text-base md:text-lg font-black text-indigo-800" id="goldSummaryTodayInr">₹0</h4>
+                <p class="text-[9px] text-indigo-600/80">If SAR remitted today</p>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-amber-600 uppercase">Today's Gold Market Value</p>
+                <h4 class="text-base md:text-lg font-black text-amber-600" id="goldSummaryValue">₹0</h4>
+                <p class="text-[9px] text-amber-600/80">Physical gold current value</p>
+              </div>
+              <div class="col-span-2 md:col-span-1 border-t md:border-t-0 md:border-l pl-0 md:pl-3 border-amber-300 pt-2 md:pt-0">
+                <p class="text-[10px] font-bold text-slate-800 uppercase">Net Profit vs Purchase</p>
+                <h4 class="text-base md:text-lg font-black" id="goldSummaryProfit">₹0</h4>
+                <p class="text-[9px] text-slate-500" id="goldSummaryProfitSub">vs Today Remit: ₹0</p>
+              </div>
+            </div>
+
+            <!-- GOLD TABLE -->
+            <div class="overflow-x-auto bg-white rounded-lg border border-amber-200">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-amber-100/60 text-amber-950 font-bold border-b border-amber-200 uppercase">
+                    <th class="p-2.5">Date</th>
+                    <th class="p-2.5 text-center">Grams</th>
+                    <th class="p-2.5 text-right">Bought (SAR)</th>
+                    <th class="p-2.5 text-right">Day Rate</th>
+                    <th class="p-2.5 text-right bg-amber-50/50">Purchase Day Conv. (₹)</th>
+                    <th class="p-2.5 text-right bg-indigo-50/30">Converted Today (₹)</th>
+                    <th class="p-2.5 text-right">Today Rate</th>
+                    <th class="p-2.5 text-right bg-amber-100/40">Today Gold Value (₹)</th>
+                    <th class="p-2.5 text-right">Profit vs Purchase (₹)</th>
+                    <th class="p-2.5 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="goldTable" class="divide-y divide-amber-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-4">
+              <h3 class="font-bold text-slate-800 text-base">SIP & Money Investments</h3>
+              <button onclick="openForm('modalSip', 'sipForm')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow">
+                + Add SIP
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                    <th class="p-3">SIP Name</th>
+                    <th class="p-3">Category</th>
+                    <th class="p-3 text-right">Monthly (₹)</th>
+                    <th class="p-3 text-right">Current Value (₹)</th>
+                    <th class="p-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sipTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 text-slate-400 py-4 px-6 text-center border-t border-slate-800 mt-auto shadow-inner">
+      <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-xs mb-2">
+        <span class="flex items-center text-emerald-400 font-bold tracking-wider uppercase text-[10px]">
+          <i class="fa-solid fa-satellite-dish animate-pulse mr-2"></i> Admin Control
+        </span>
+        <span class="hidden md:inline text-slate-600">|</span>
+        <span class="flex items-center text-indigo-400 font-bold tracking-wider uppercase text-[10px]">
+          <i class="fa-solid fa-cloud mr-2"></i> Firebase Real-Time Cloud Database
+        </span>
+        <span class="hidden md:inline text-slate-600">|</span>
+        <span class="flex items-center text-amber-400 font-bold tracking-wider uppercase text-[10px]">
+          <i class="fa-solid fa-rotate mr-2"></i> Live Synchronization Active
+        </span>
+      </div>
+      <p class="text-[10px] text-slate-500 mt-2">&copy; 2026 ATMOS Digital Solutions. All Rights Reserved. FinTrack Financial Suite v2.5.</p>
+    </footer>
+  </div>
+
+  <!-- MODALS PORTAL -->
+  
+  <!-- Bank Modal -->
+  <div id="modalBank" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">Bank Account</h3>
+      <form id="bankForm" onsubmit="saveDataEntry(event, 'banks')" class="space-y-3 text-xs">
+        <input type="hidden" id="bankId">
+        <input type="hidden" id="bankCurrency">
+        <div><label class="block font-bold text-slate-600 mb-1">Bank Name</label><input type="text" id="bankName" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Current Balance</label><input type="number" step="0.01" id="bankBalance" required class="w-full p-2 border rounded-lg"></div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalBank')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Expense Modal -->
+  <div id="modalExpense" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">Expense Entry</h3>
+      <form id="expenseForm" onsubmit="saveExpense(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="expenseId">
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="block font-bold text-slate-600 mb-1">Date</label><input type="date" id="expenseDate" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Paid By</label><select id="expensePaidBy" class="w-full p-2 border rounded-lg font-bold"><option value="Fazy">Fazy</option><option value="Juby">Juby</option></select></div>
+        </div>
+        <div><label class="block font-bold text-slate-600 mb-1">Description</label><input type="text" id="expenseDesc" required class="w-full p-2 border rounded-lg"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="block font-bold text-slate-600 mb-1">Currency</label><select id="expenseCurrency" class="w-full p-2 border rounded-lg font-bold"><option value="SAR">SAR</option><option value="INR">INR (₹)</option></select></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Amount</label><input type="number" step="0.01" id="expenseAmount" required class="w-full p-2 border rounded-lg"></div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalExpense')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settlement Modal -->
+  <div id="modalSettlement" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">Log Settlement Payment</h3>
+      <form id="settlementForm" onsubmit="saveSettlement(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="stlCurrency">
+        <div><label class="block font-bold text-slate-600 mb-1">Date</label><input type="date" id="stlDate" required class="w-full p-2 border rounded-lg"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="block font-bold text-slate-600 mb-1">Who Paid?</label><select id="stlPayer" class="w-full p-2 border rounded-lg"><option value="Fazy">Fazy</option><option value="Juby">Juby</option></select></div>
+          <div><label class="block font-bold text-slate-600 mb-1">To Whom?</label><select id="stlPayee" class="w-full p-2 border rounded-lg"><option value="Juby">Juby</option><option value="Fazy">Fazy</option></select></div>
+        </div>
+        <div><label class="block font-bold text-slate-600 mb-1">Amount Paid</label><input type="number" step="0.01" id="stlAmount" required class="w-full p-2 border rounded-lg"></div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalSettlement')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg">Save Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Debt Modal -->
+  <div id="modalDebt" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">Liability / Debt</h3>
+      <form id="debtForm" onsubmit="saveDataEntry(event, 'debts')" class="space-y-3 text-xs">
+        <input type="hidden" id="debtId">
+        <div><label class="block font-bold text-slate-600 mb-1">Debt Name</label><input type="text" id="debtName" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Total Principal Amount (INR ₹)</label><input type="number" id="debtTotal" required class="w-full p-2 border rounded-lg"></div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalDebt')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-red-600 text-white font-bold rounded-lg">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Debt Payment Log Modal -->
+  <div id="modalDebtPay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">Debt Payment Log</h3>
+      <form id="debtPayForm" onsubmit="saveDebtPayment(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="payParentId">
+        <input type="hidden" id="payId">
+        <div><label class="block font-bold text-slate-600 mb-1">Date</label><input type="date" id="payDate" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Amount Paid (INR ₹)</label><input type="number" id="payAmount" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Description / Note</label><input type="text" id="payNotes" required class="w-full p-2 border rounded-lg"></div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalDebtPay')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg">Save Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Gold Modal -->
+  <div id="modalGold" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+      <h3 class="font-bold text-base mb-4">Gold Purchase Entry</h3>
+      <form id="goldForm" onsubmit="saveDataEntry(event, 'gold')" class="space-y-3 text-xs">
+        <input type="hidden" id="goldId">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block font-bold text-slate-600 mb-1">Date</label><input type="text" id="goldDate" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Purity</label><select id="goldPurity" class="w-full p-2 border rounded-lg"><option value="24K">24 K</option><option value="22K">22 K</option></select></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Grams (24K)</label><input type="number" step="0.1" id="goldGrams24" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Grams (22K)</label><input type="number" step="0.1" id="goldGrams22" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Purchase SAR</label><input type="number" id="goldSar" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Conv. Rate on Purchase Day</label><input type="number" step="0.01" id="goldConvRate" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Day Kerala Rate</label><input type="number" id="goldKeralaRate" required class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Today Market Rate</label><input type="number" id="goldTodayRate" required class="w-full p-2 border rounded-lg"></div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalGold')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-amber-500 text-white font-bold rounded-lg">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SIP Modal -->
+  <div id="modalSip" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">SIP / Investment</h3>
+      <form id="sipForm" onsubmit="saveDataEntry(event, 'sips')" class="space-y-3 text-xs">
+        <input type="hidden" id="sipId">
+        <div><label class="block font-bold text-slate-600 mb-1">Name</label><input type="text" id="sipName" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Category</label><input type="text" id="sipCategory" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Monthly SIP (₹)</label><input type="number" id="sipMonthly" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Current Value (₹)</label><input type="number" id="sipValue" required class="w-full p-2 border rounded-lg"></div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalSip')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FIREBASE SDKs & APP SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkQoAJQYvrhtwfd3LBsitEVsmQrsnBUhk",
+      authDomain: "fazy-juby-financial-planner.firebaseapp.com",
+      databaseURL: "https://fazy-juby-financial-planner-default-rtdb.firebaseio.com",
+      projectId: "fazy-juby-financial-planner",
+      storageBucket: "fazy-juby-financial-planner.firebasestorage.app",
+      messagingSenderId: "744317242864",
+      appId: "1:744317242864:web:41575255ad328c6361a135",
+      measurementId: "G-N5G3ZG7L6P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    let state = {
+      liveRate: 24.96,
+      banks: [
+        { id: 1, name: 'HDFC Bank', currency: 'INR', balance: 100000 },
+        { id: 2, name: 'Saudi Bank / D360', currency: 'SAR', balance: 4500 }
+      ],
+      debts: [
+        { id: 1, name: 'Mother Debt', total: 500000, payments: [] },
+        { id: 2, name: 'Gold Loan (Bank)', total: 550000, payments: [] }
+      ],
+      gold: [
+        { id: 1, date: '20/02/2026', purity: '22K', grams24: 0, grams22: 8, sar: 4520, convRate: 24.25, keralaRate: 14315, todayRate: 14810 },
+        { id: 2, date: '13/03/2026', purity: '24K', grams24: 10, grams22: 0, sar: 6215, convRate: 24.66, keralaRate: 16113, todayRate: 16156 },
+        { id: 3, date: '25/03/2026', purity: '24K', grams24: 10, grams22: 0, sar: 5680, convRate: 25.09, keralaRate: 14667, todayRate: 16156 },
+        { id: 4, date: '03/06/2026', purity: '24K', grams24: 10, grams22: 0, sar: 5490, convRate: 25.33, keralaRate: 15633, todayRate: 16156 },
+        { id: 5, date: '12/06/2026', purity: '24K', grams24: 10, grams22: 0, sar: 5210, convRate: 25.18, keralaRate: 14858, todayRate: 16156 }
+      ],
+      sips: [
+        { id: 1, name: 'Nippon Small Cap SIP', category: 'Equity SIP', monthly: 10000, value: 185000 }
+      ],
+      expenses: { '2026-08': [] },
+      settlements: { '2026-08': [] }
+    };
+
+    // NORMALIZE STATE RECEIVED FROM FIREBASE TO PREVENT UNDEFINED ARRAY ERRORS
+    function normalizeState(val) {
+      if (!val) return;
+      state.liveRate = typeof val.liveRate === 'number' ? val.liveRate : 24.96;
+      state.banks = Array.isArray(val.banks) ? val.banks : (val.banks ? Object.values(val.banks) : []);
+      state.debts = Array.isArray(val.debts) ? val.debts : (val.debts ? Object.values(val.debts) : []);
+      state.gold = Array.isArray(val.gold) ? val.gold : (val.gold ? Object.values(val.gold) : []);
+      state.sips = Array.isArray(val.sips) ? val.sips : (val.sips ? Object.values(val.sips) : []);
+      state.expenses = val.expenses || {};
+      state.settlements = val.settlements || {};
+
+      state.debts.forEach(d => {
+        if (!d.payments) d.payments = [];
+        else if (!Array.isArray(d.payments)) d.payments = Object.values(d.payments);
+      });
+    }
+
+    // IMMEDIATE LOCAL RENDER AND BACKGROUND FIREBASE SYNC
+    window.saveData = function() {
+      renderAll(); 
+      set(ref(db, 'fintrack_data'), state).catch(err => console.error("Firebase sync error:", err));
+    };
+
+    async function initFirebase() {
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/SAR');
+        const data = await res.json();
+        if(data && data.rates && data.rates.INR) {
+          state.liveRate = data.rates.INR;
+        }
+      } catch(e) {}
+
+      onValue(ref(db, 'fintrack_data'), (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          normalizeState(val);
+        } else {
+          saveData();
+        }
+        const liveRateInput = document.getElementById('liveRateInput');
+        if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
+        renderAll();
+      });
+    }
+
+    window.updateExchangeRate = function(val) {
+      state.liveRate = parseFloat(val) || 24.96;
+      saveData();
+    };
+
+    window.handleLogin = function(e) {
+      e.preventDefault();
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('hidden');
+    };
+
+    window.handleLogout = function() {
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    };
+
+    window.toggleSidebar = function() {
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('hidden');
+    };
+
+    window.switchTab = function(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      
+      document.querySelectorAll('#sidebar nav button').forEach(btn => {
+        btn.className = "w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3 transition";
+      });
+      document.querySelectorAll('.topnav-btn').forEach(btn => {
+        btn.className = "topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition";
+      });
+
+      document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+      
+      const sideBtn = document.getElementById(`side-tab-${tabId}`);
+      if(sideBtn) sideBtn.className = "w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold bg-indigo-600 text-white flex items-center space-x-3 transition";
+      
+      const topBtn = document.getElementById(`top-tab-${tabId}`);
+      if(topBtn) topBtn.className = "topnav-btn px-4 py-1.5 rounded text-xs font-bold bg-indigo-600 text-white transition";
+    };
+
+    window.openForm = function(modalId, formId, data = null) {
+      document.getElementById(formId).reset();
+      Array.from(document.getElementById(formId).elements).forEach(el => {
+        if(el.type === 'hidden') el.value = '';
+      });
+      if (data) {
+        for (const [key, value] of Object.entries(data)) {
+          const fieldId = formId.replace('Form', '') + key.charAt(0).toUpperCase() + key.slice(1);
+          const el = document.getElementById(fieldId);
+          if (el) el.value = value;
+        }
+      } else {
+        const prefix = formId.replace('Form', '');
+        const dateEl = document.getElementById(prefix + 'Date');
+        if (dateEl && dateEl.type === 'date') dateEl.value = new Date().toISOString().split('T')[0];
+        if (formId === 'goldForm') document.getElementById('goldConvRate').value = state.liveRate.toFixed(2);
+      }
+      document.getElementById(modalId).classList.remove('hidden');
+    };
+
+    window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); };
+
+    window.editEntry = function(collection, id) {
+      if (!Array.isArray(state[collection])) return;
+      const item = state[collection].find(i => String(i.id) === String(id));
+      if (!item) return;
+
+      if (collection === 'banks') openForm('modalBank', 'bankForm', item);
+      else if (collection === 'debts') openForm('modalDebt', 'debtForm', item);
+      else if (collection === 'gold') openForm('modalGold', 'goldForm', item);
+      else if (collection === 'sips') openForm('modalSip', 'sipForm', item);
+    };
+
+    window.saveDataEntry = function(e, collection) {
+      e.preventDefault();
+      const form = e.target;
+      const prefix = form.id.replace('Form', '');
+      const idField = document.getElementById(prefix + 'Id');
+      const id = idField.value ? parseInt(idField.value) : Date.now();
+      
+      if (!Array.isArray(state[collection])) {
+        state[collection] = [];
+      }
+
+      let entry = { id: id };
+      Array.from(form.elements).forEach(el => {
+        if(el.id && el.id.startsWith(prefix) && el.id !== prefix + 'Id') {
+          let key = el.id.replace(prefix, '');
+          key = key.charAt(0).toLowerCase() + key.slice(1);
+          entry[key] = (el.type === 'number') ? parseFloat(el.value) : el.value;
+        }
+      });
+
+      if(collection === 'debts' && !idField.value) entry.payments = [];
+      if(collection === 'debts' && idField.value) {
+        const existing = state.debts.find(d => String(d.id) === String(id));
+        if(existing) entry.payments = existing.payments || [];
+      }
+
+      if (idField.value) {
+        const idx = state[collection].findIndex(item => String(item.id) === String(id));
+        if(idx > -1) state[collection][idx] = entry;
+        else state[collection].push(entry);
+      } else {
+        state[collection].push(entry);
+      }
+
+      closeModal('modal' + prefix.charAt(0).toUpperCase() + prefix.slice(1));
+      saveData();
+    };
+
+    window.deleteEntry = function(collection, id) {
+      if(confirm('Are you sure you want to delete this record?')) {
+        if (!Array.isArray(state[collection])) state[collection] = [];
+        state[collection] = state[collection].filter(i => String(i.id) !== String(id));
+        saveData();
+      }
+    };
+
+    function renderAll() {
+      renderOverview();
+      renderExpenses();
+      renderDebts();
+      renderGoldAndSip();
+    }
+
+    function renderOverview() {
+      let totINR = 0, totSAR = 0;
+      const inTbody = document.getElementById('indianBanksTable'); inTbody.innerHTML = '';
+      const saTbody = document.getElementById('saudiBanksTable'); saTbody.innerHTML = '';
+
+      const indianBanks = (state.banks || []).filter(b => b.currency === 'INR');
+      const saudiBanks = (state.banks || []).filter(b => b.currency === 'SAR');
+
+      if (indianBanks.length === 0) {
+        inTbody.innerHTML = `<tr><td colspan="3" class="py-3 text-center text-slate-400 italic">No Indian banks added.</td></tr>`;
+      } else {
+        indianBanks.forEach(b => {
+          totINR += b.balance;
+          inTbody.innerHTML += `<tr>
+            <td class="py-2">${b.name}</td>
+            <td class="py-2 text-right font-bold">₹${b.balance.toLocaleString()}</td>
+            <td class="py-2 text-center text-slate-400">
+              <button onclick="editEntry('banks', ${b.id})" class="hover:text-indigo-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteEntry('banks', ${b.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
+        });
+      }
+
+      if (saudiBanks.length === 0) {
+        saTbody.innerHTML = `<tr><td colspan="4" class="py-3 text-center text-slate-400 italic">No Saudi banks added.</td></tr>`;
+      } else {
+        saudiBanks.forEach(b => {
+          totSAR += b.balance;
+          saTbody.innerHTML += `<tr>
+            <td class="py-2">${b.name}</td>
+            <td class="py-2 text-right font-bold">${b.balance.toLocaleString()} SAR</td>
+            <td class="py-2 text-right text-slate-500">₹${Math.round(b.balance * state.liveRate).toLocaleString()}</td>
+            <td class="py-2 text-center text-slate-400">
+              <button onclick="editEntry('banks', ${b.id})" class="hover:text-amber-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteEntry('banks', ${b.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
+        });
+      }
+
+      const totalLiquidBankINR = totINR + (totSAR * state.liveRate);
+      let totalDebtRemaining = (state.debts || []).reduce((sum, d) => sum + Math.max(0, d.total - (d.payments || []).reduce((s,p)=>s+p.amount,0)), 0);
+      let totalGoldSip = (state.sips || []).reduce((s, sp) => s + sp.value, 0) + (state.gold || []).reduce((s, g) => s + (g.todayRate * ((parseFloat(g.grams24)||0) + (parseFloat(g.grams22)||0))), 0);
+
+      document.getElementById('sumBankBalance').innerText = `₹${Math.round(totalLiquidBankINR).toLocaleString()}`;
+      document.getElementById('sumTotalDebts').innerText = `₹${Math.round(totalDebtRemaining).toLocaleString()}`;
+      document.getElementById('sumGoldSip').innerText = `₹${Math.round(totalGoldSip).toLocaleString()}`;
+      document.getElementById('sumNetPosition').innerText = `₹${Math.round(totalLiquidBankINR + totalGoldSip - totalDebtRemaining).toLocaleString()}`;
+    }
+
+    function renderExpenses() {
+      const month = document.getElementById('expenseMonthSelect').value;
+      if(!state.expenses[month]) state.expenses[month] = [];
+      if(!state.settlements[month]) state.settlements[month] = [];
+      
+      const tbody = document.getElementById('expensesTable'); tbody.innerHTML = '';
+      let fazySAR = 0, jubySAR = 0, fazyINR = 0, jubyINR = 0;
+      let totalSarExp = 0, totalInrExp = 0;
+
+      if(state.expenses[month].length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">No expenses logged for this month yet.</td></tr>`;
+      } else {
+        state.expenses[month].forEach(item => {
+          if(item.currency === 'SAR') { 
+            item.paidBy === 'Fazy' ? fazySAR += item.amount : jubySAR += item.amount; 
+            totalSarExp += item.amount;
+          }
+          else { 
+            item.paidBy === 'Fazy' ? fazyINR += item.amount : jubyINR += item.amount; 
+            totalInrExp += item.amount;
+          }
+
+          tbody.innerHTML += `<tr>
+            <td class="p-3">${item.date}</td>
+            <td class="p-3 font-semibold">${item.desc}</td>
+            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded font-bold text-[10px] uppercase tracking-wider ${item.paidBy==='Fazy'?'bg-indigo-100 text-indigo-700':'bg-teal-100 text-teal-700'}">${item.paidBy}</span></td>
+            <td class="p-3 text-right font-bold ${item.currency==='SAR'?'text-amber-600':'text-indigo-600'}">${item.amount.toLocaleString()} ${item.currency}</td>
+            <td class="p-3 text-center text-slate-400">
+              <button onclick="editExpense('${month}', ${item.id})" class="hover:text-indigo-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteExpense('${month}', ${item.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
+        });
+      }
+
+      document.getElementById('totalSARLogged').innerText = `${totalSarExp.toLocaleString()} SAR`;
+      document.getElementById('totalINRLogged').innerText = `₹${totalInrExp.toLocaleString()}`;
+      document.getElementById('fazySARPaid').innerText = fazySAR.toLocaleString();
+      document.getElementById('jubySARPaid').innerText = jubySAR.toLocaleString();
+      document.getElementById('fazyINRPaid').innerText = fazyINR.toLocaleString();
+      document.getElementById('jubyINRPaid').innerText = jubyINR.toLocaleString();
+
+      let settledFazyToJubySAR = 0, settledJubyToFazySAR = 0;
+      let settledFazyToJubyINR = 0, settledJubyToFazyINR = 0;
+      
+      const sBody = document.getElementById('settlementsTable'); sBody.innerHTML = '';
+      if(state.settlements[month].length === 0) {
+        sBody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400 italic">No settlements logged yet.</td></tr>`;
+      } else {
+        state.settlements[month].forEach(s => {
+          if(s.currency === 'SAR') { s.payer === 'Fazy' ? settledFazyToJubySAR += s.amount : settledJubyToFazySAR += s.amount; }
+          else { s.payer === 'Fazy' ? settledFazyToJubyINR += s.amount : settledJubyToFazyINR += s.amount; }
+
+          sBody.innerHTML += `<tr>
+            <td class="p-2">${s.date}</td>
+            <td class="p-2 font-bold">${s.payer} &rarr; ${s.payee}</td>
+            <td class="p-2 text-right font-bold text-emerald-600">${s.amount} ${s.currency}</td>
+            <td class="p-2 text-center text-slate-400"><button onclick="deleteSettlement('${month}', ${s.id})" class="hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        });
+      }
+
+      const targetSAR = (fazySAR + jubySAR) / 2;
+      const targetINR = (fazyINR + jubyINR) / 2;
+      let balanceSAR = (fazySAR - targetSAR) - settledJubyToFazySAR + settledFazyToJubySAR; 
+      let balanceINR = (fazyINR - targetINR) - settledJubyToFazyINR + settledFazyToJubyINR;
+
+      updateSettlementUI('expStatusSAR', balanceSAR, 'SAR', 'amber');
+      updateSettlementUI('expStatusINR', balanceINR, 'INR', 'indigo');
+    }
+
+    function updateSettlementUI(elId, balance, curr, color) {
+      const el = document.getElementById(elId);
+      if(Math.abs(balance) < 0.1) {
+        el.innerText = "All Settled Up ✓";
+        el.className = "text-sm font-bold text-emerald-600 mt-1";
+      } else if (balance > 0) {
+        el.innerText = `Juby owes Fazy: ${balance.toFixed(2)} ${curr}`;
+        el.className = `text-sm font-bold text-${color}-600 mt-1`;
+      } else {
+        el.innerText = `Fazy owes Juby: ${Math.abs(balance).toFixed(2)} ${curr}`;
+        el.className = `text-sm font-bold text-${color}-600 mt-1`;
+      }
+    }
+
+    window.openNewExpenseModal = function() {
+      document.getElementById('expenseForm').reset();
+      document.getElementById('expenseId').value = '';
+      document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalExpense').classList.remove('hidden');
+    };
+
+    window.editExpense = function(month, id) {
+      if (!state.expenses[month]) return;
+      const exp = state.expenses[month].find(x => String(x.id) === String(id));
+      if(!exp) return;
+      document.getElementById('expenseId').value = exp.id;
+      document.getElementById('expenseDate').value = exp.date;
+      document.getElementById('expensePaidBy').value = exp.paidBy;
+      document.getElementById('expenseDesc').value = exp.desc;
+      document.getElementById('expenseCurrency').value = exp.currency;
+      document.getElementById('expenseAmount').value = exp.amount;
+      document.getElementById('modalExpense').classList.remove('hidden');
+    };
+
+    window.saveExpense = function(e) {
+      e.preventDefault();
+      const month = document.getElementById('expenseMonthSelect').value;
+      if (!state.expenses[month]) state.expenses[month] = [];
+
+      const idStr = document.getElementById('expenseId').value;
+      const id = idStr ? parseInt(idStr) : Date.now();
+      
+      const item = {
+        id: id,
+        date: document.getElementById('expenseDate').value,
+        desc: document.getElementById('expenseDesc').value,
+        paidBy: document.getElementById('expensePaidBy').value,
+        currency: document.getElementById('expenseCurrency').value,
+        amount: parseFloat(document.getElementById('expenseAmount').value) || 0
+      };
+
+      if(idStr) {
+        const idx = state.expenses[month].findIndex(x => String(x.id) === String(id));
+        if(idx > -1) {
+          state.expenses[month][idx] = item;
+        } else {
+          state.expenses[month].push(item);
+        }
+      } else {
+        state.expenses[month].push(item);
+      }
+      closeModal('modalExpense');
+      saveData();
+    };
+    
+    window.deleteExpense = function(month, id) { 
+      if(confirm('Are you sure you want to delete this expense?')) {
+        if (!state.expenses[month]) state.expenses[month] = [];
+        state.expenses[month] = state.expenses[month].filter(x => String(x.id) !== String(id)); 
+        saveData(); 
+      }
+    };
+
+    window.openSettlementForm = function(curr) {
+      document.getElementById('settlementForm').reset();
+      document.getElementById('stlCurrency').value = curr;
+      document.getElementById('stlDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalSettlement').classList.remove('hidden');
+    };
+
+    window.saveSettlement = function(e) {
+      e.preventDefault();
+      const month = document.getElementById('expenseMonthSelect').value;
+      if (!state.settlements[month]) state.settlements[month] = [];
+
+      state.settlements[month].push({
+        id: Date.now(),
+        date: document.getElementById('stlDate').value,
+        payer: document.getElementById('stlPayer').value,
+        payee: document.getElementById('stlPayee').value,
+        currency: document.getElementById('stlCurrency').value,
+        amount: parseFloat(document.getElementById('stlAmount').value) || 0
+      });
+      closeModal('modalSettlement');
+      saveData();
+    };
+
+    window.deleteSettlement = function(month, id) { 
+      if(confirm('Delete this settlement log?')) {
+        if (!state.settlements[month]) state.settlements[month] = [];
+        state.settlements[month] = state.settlements[month].filter(x => String(x.id) !== String(id)); 
+        saveData(); 
+      }
+    };
+
+    function renderDebts() {
+      const container = document.getElementById('debtsContainer'); container.innerHTML = '';
+      if (!state.debts || state.debts.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-400 italic col-span-2">No liabilities or debts logged.</div>`;
+        return;
+      }
+
+      state.debts.forEach(d => {
+        const payments = d.payments || [];
+        const paidTotal = payments.reduce((s, p) => s + p.amount, 0);
+        const remaining = d.total - paidTotal;
+        const isClosed = remaining <= 0;
+
+        let paymentsHtml = '';
+        payments.forEach(p => {
+          paymentsHtml += `
+            <div class="flex justify-between items-center text-xs border-b border-slate-100 py-1.5">
+              <div><span class="font-bold">${p.date}</span> <span class="text-slate-500">- ${p.notes}</span></div>
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-emerald-600">-₹${p.amount.toLocaleString()}</span>
+                <button onclick="editDebtPayment(${d.id}, ${p.id})" class="text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteDebtPayment(${d.id}, ${p.id})" class="text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>`;
+        });
+
+        container.innerHTML += `
+          <div class="border rounded-xl p-5 ${isClosed ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50/50 border-red-200'} space-y-3 relative">
+            <div class="absolute top-3 right-3 text-slate-400">
+               <button onclick="editEntry('debts', ${d.id})" class="hover:text-indigo-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+               <button onclick="deleteEntry('debts', ${d.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-base text-slate-800 pr-12">${d.name}</h4>
+              <p class="text-xs text-slate-500">Initial Principal: ₹${d.total.toLocaleString()}</p>
+            </div>
+            <div class="font-black text-xl ${isClosed?'text-emerald-600':'text-red-600'}">${isClosed?'CLOSED': '₹'+Math.max(0, remaining).toLocaleString() + ' Remaining'}</div>
+            <div class="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase border-b pb-1 mb-1">Payment Logs</p>
+              ${paymentsHtml || '<p class="text-xs text-slate-400 italic">No payment logs yet.</p>'}
+            </div>
+            <button onclick="openPayDebtModal(${d.id})" ${isClosed ? 'disabled class="hidden"' : 'class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow mt-2"'}>
+              + Log Payment
+            </button>
+          </div>`;
+      });
+    }
+
+    window.openPayDebtModal = function(debtId) {
+      document.getElementById('debtPayForm').reset();
+      document.getElementById('payParentId').value = debtId;
+      document.getElementById('payId').value = '';
+      document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalDebtPay').classList.remove('hidden');
+    };
+
+    window.editDebtPayment = function(debtId, payId) {
+      const debt = state.debts.find(d => String(d.id) === String(debtId));
+      if (!debt || !debt.payments) return;
+      const pay = debt.payments.find(p => String(p.id) === String(payId));
+      if (!pay) return;
+      document.getElementById('payParentId').value = debtId;
+      document.getElementById('payId').value = payId;
+      document.getElementById('payDate').value = pay.date;
+      document.getElementById('payAmount').value = pay.amount;
+      document.getElementById('payNotes').value = pay.notes;
+      document.getElementById('modalDebtPay').classList.remove('hidden');
+    };
+
+    window.saveDebtPayment = function(e) {
+      e.preventDefault();
+      const debtId = parseInt(document.getElementById('payParentId').value);
+      const payIdStr = document.getElementById('payId').value;
+      const debt = state.debts.find(d => String(d.id) === String(debtId));
+      
+      if (debt) {
+        if (!debt.payments) debt.payments = [];
+        const payData = {
+          id: payIdStr ? parseInt(payIdStr) : Date.now(),
+          date: document.getElementById('payDate').value,
+          amount: parseFloat(document.getElementById('payAmount').value) || 0,
+          notes: document.getElementById('payNotes').value
+        };
+        if (payIdStr) {
+          const idx = debt.payments.findIndex(p => String(p.id) === String(payData.id));
+          if(idx > -1) debt.payments[idx] = payData;
+        } else {
+          debt.payments.push(payData);
+        }
+      }
+      closeModal('modalDebtPay');
+      saveData();
+    };
+    
+    window.deleteDebtPayment = function(debtId, payId) {
+      if(confirm('Delete this payment log?')) {
+        const debt = state.debts.find(d => String(d.id) === String(debtId));
+        if (debt && debt.payments) debt.payments = debt.payments.filter(p => String(p.id) !== String(payId));
+        saveData();
+      }
+    };
+
+    function renderGoldAndSip() {
+      const gTbody = document.getElementById('goldTable'); gTbody.innerHTML = '';
+      
+      let sumSarInvested = 0;
+      let sumPurchaseDayInr = 0;
+      let sumTodayConvInr = 0;
+      let sumTodayGoldVal = 0;
+
+      if (!state.gold || state.gold.length === 0) {
+        gTbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400 italic">No gold purchases logged yet.</td></tr>`;
+      } else {
+        state.gold.forEach(g => {
+          const totalGrams = (parseFloat(g.grams24) || 0) + (parseFloat(g.grams22) || 0);
+          const purchaseDayInr = Math.round(g.sar * g.convRate);
+          const todayConvInr = Math.round(g.sar * state.liveRate);
+          const todayGoldTotal = Math.round(g.todayRate * totalGrams);
+          const profitVsPurchase = todayGoldTotal - purchaseDayInr;
+
+          sumSarInvested += g.sar;
+          sumPurchaseDayInr += purchaseDayInr;
+          sumTodayConvInr += todayConvInr;
+          sumTodayGoldVal += todayGoldTotal;
+
+          gTbody.innerHTML += `<tr>
+            <td class="p-2.5 font-bold">${g.date}</td>
+            <td class="p-2.5 text-center font-bold text-amber-700">${totalGrams}g</td>
+            <td class="p-2.5 text-right font-semibold">${g.sar.toLocaleString()} SAR</td>
+            <td class="p-2.5 text-right text-slate-500">${g.convRate}</td>
+            <td class="p-2.5 text-right font-bold bg-amber-50/50 border-l border-amber-100">₹${purchaseDayInr.toLocaleString()}</td>
+            <td class="p-2.5 text-right font-bold text-indigo-700 bg-indigo-50/30 border-l border-indigo-100">₹${todayConvInr.toLocaleString()}</td>
+            <td class="p-2.5 text-right text-slate-500">₹${g.todayRate.toLocaleString()}</td>
+            <td class="p-2.5 text-right font-black text-amber-900 bg-amber-100/50 border-l border-amber-200">₹${todayGoldTotal.toLocaleString()}</td>
+            <td class="p-2.5 text-right font-bold ${profitVsPurchase >= 0 ? 'text-emerald-600' : 'text-red-500'} border-l border-slate-100">
+               ${profitVsPurchase >= 0 ? '+' : ''}₹${profitVsPurchase.toLocaleString()}
+            </td>
+            <td class="p-2.5 text-center text-slate-400">
+               <button onclick="editEntry('gold', ${g.id})" class="hover:text-indigo-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+               <button onclick="deleteEntry('gold', ${g.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
+        });
+      }
+
+      // Update Summary Cards
+      document.getElementById('goldSummarySar').innerText = `${sumSarInvested.toLocaleString()} SAR`;
+      document.getElementById('goldSummaryPurchaseInr').innerText = `₹${sumPurchaseDayInr.toLocaleString()}`;
+      document.getElementById('goldSummaryTodayInr').innerText = `₹${sumTodayConvInr.toLocaleString()}`;
+      document.getElementById('goldSummaryValue').innerText = `₹${sumTodayGoldVal.toLocaleString()}`;
+      
+      const netProfitVsPurchase = sumTodayGoldVal - sumPurchaseDayInr;
+      const netProfitVsTodayRemit = sumTodayGoldVal - sumTodayConvInr;
+
+      const profitEl = document.getElementById('goldSummaryProfit');
+      profitEl.innerText = `${netProfitVsPurchase >= 0 ? '+' : ''}₹${netProfitVsPurchase.toLocaleString()}`;
+      profitEl.className = `text-base md:text-lg font-black ${netProfitVsPurchase >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+
+      const profitSubEl = document.getElementById('goldSummaryProfitSub');
+      profitSubEl.innerText = `vs Remit Today: ${netProfitVsTodayRemit >= 0 ? '+' : ''}₹${netProfitVsTodayRemit.toLocaleString()}`;
+
+      // SIP Table Render
+      const sTbody = document.getElementById('sipTable'); sTbody.innerHTML = '';
+      if (!state.sips || state.sips.length === 0) {
+        sTbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">No SIP investments logged yet.</td></tr>`;
+      } else {
+        state.sips.forEach(s => {
+          sTbody.innerHTML += `<tr>
+            <td class="p-3 font-bold text-indigo-900">${s.name}</td>
+            <td class="p-3 text-slate-500">${s.category}</td>
+            <td class="p-3 text-right font-bold">₹${(s.monthly || 0).toLocaleString()}</td>
+            <td class="p-3 text-right font-black text-emerald-600">₹${(s.value || 0).toLocaleString()}</td>
+            <td class="p-3 text-center text-slate-400">
+               <button onclick="editEntry('sips', ${s.id})" class="hover:text-indigo-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+               <button onclick="deleteEntry('sips', ${s.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
+        });
+      }
+    }
+
+    window.onload = initFirebase;
+  </script>
+</body>
+</html>
