@@ -561,14 +561,14 @@
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCkQoAJQYvrhtwfd3LBsitEVsmQrsnBUhk",
-      authDomain: "fazy-juby-financial-planner.firebaseapp.com",
-      databaseURL: "https://fazy-juby-financial-planner-default-rtdb.firebaseio.com",
-      projectId: "fazy-juby-financial-planner",
-      storageBucket: "fazy-juby-financial-planner.firebasestorage.app",
-      messagingSenderId: "744317242864",
-      appId: "1:744317242864:web:41575255ad328c6361a135",
-      measurementId: "G-N5G3ZG7L6P"
+      apiKey: "AIzaSyArwYOwIlBWV1GlvH-51_mfntMmfwRL408",
+      authDomain: "fintrack-d7618.firebaseapp.com",
+      databaseURL: "https://fintrack-d7618-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fintrack-d7618",
+      storageBucket: "fintrack-d7618.firebasestorage.app",
+      messagingSenderId: "942185672616",
+      appId: "1:942185672616:web:f52b7c4592772810b1b79d",
+      measurementId: "G-NYV8F7ZSB2"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -601,7 +601,6 @@
 
     function normalizeState(val) {
       if (!val) return;
-      // Preserve liveRate from fetched database or keep fallback if missing
       if (typeof val.liveRate === 'number') {
         state.liveRate = val.liveRate;
       }
@@ -624,12 +623,10 @@
     };
 
     async function initFirebase() {
-      // 1. Instantly paint UI with the default fallback value (25.50 or stored state) so it loads immediately
       const liveRateInput = document.getElementById('liveRateInput');
       if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
       renderAll();
 
-      // 2. Fetch live conversion rate asynchronously in the background without blocking render
       try {
         const res = await fetch('https://api.exchangerate-api.com/v4/latest/SAR');
         const data = await res.json();
@@ -642,7 +639,6 @@
         console.warn("Live rate API timeout/error, retaining default fallback value.");
       }
 
-      // 3. Bind Firebase Realtime Database listener
       onValue(ref(db, 'fintrack_data'), (snapshot) => {
         const val = snapshot.val();
         if (val) {
@@ -1148,7 +1144,6 @@
         });
       }
 
-      // Update Summary Cards
       document.getElementById('goldSummarySar').innerText = `${sumSarInvested.toLocaleString()} SAR`;
       document.getElementById('goldSummaryPurchaseInr').innerText = `₹${sumPurchaseDayInr.toLocaleString()}`;
       document.getElementById('goldSummaryTodayInr').innerText = `₹${sumTodayConvInr.toLocaleString()}`;
@@ -1164,8 +1159,8 @@
       const profitSubEl = document.getElementById('goldSummaryProfitSub');
       profitSubEl.innerText = `vs Remit Today: ${netProfitVsTodayRemit >= 0 ? '+' : ''}₹${netProfitVsTodayRemit.toLocaleString()}`;
 
-      // SIP Table Render
-      const sTbody = document.getElementById('sipTable'); sTbody.innerHTML = '';
+      const sTbody = document.getElementById('sipTable'); sTbody.innerHTML = {};
+      sTbody.innerHTML = '';
       if (!state.sips || state.sips.length === 0) {
         sTbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">No SIP investments logged yet.</td></tr>`;
       } else {
