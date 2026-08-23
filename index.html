@@ -576,7 +576,7 @@
     const db = getDatabase(app);
 
     let state = {
-      liveRate: 24.96,
+      liveRate: 25.50, // Default fallback rate for fast loading
       banks: [
         { id: 1, name: 'HDFC Bank', currency: 'INR', balance: 100000 },
         { id: 2, name: 'Saudi Bank / D360', currency: 'SAR', balance: 4500 }
@@ -599,10 +599,12 @@
       settlements: { '2026-08': [] }
     };
 
-    // NORMALIZE STATE RECEIVED FROM FIREBASE TO PREVENT UNDEFINED ARRAY ERRORS
     function normalizeState(val) {
       if (!val) return;
-      state.liveRate = typeof val.liveRate === 'number' ? val.liveRate : 24.96;
+      // Preserve liveRate from fetched database or keep fallback if missing
+      if (typeof val.liveRate === 'number') {
+        state.liveRate = val.liveRate;
+      }
       state.banks = Array.isArray(val.banks) ? val.banks : (val.banks ? Object.values(val.banks) : []);
       state.debts = Array.isArray(val.debts) ? val.debts : (val.debts ? Object.values(val.debts) : []);
       state.gold = Array.isArray(val.gold) ? val.gold : (val.gold ? Object.values(val.gold) : []);
@@ -616,21 +618,31 @@
       });
     }
 
-    // IMMEDIATE LOCAL RENDER AND BACKGROUND FIREBASE SYNC
     window.saveData = function() {
       renderAll(); 
       set(ref(db, 'fintrack_data'), state).catch(err => console.error("Firebase sync error:", err));
     };
 
     async function initFirebase() {
+      // 1. Instantly paint UI with the default fallback value (25.50 or stored state) so it loads immediately
+      const liveRateInput = document.getElementById('liveRateInput');
+      if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
+      renderAll();
+
+      // 2. Fetch live conversion rate asynchronously in the background without blocking render
       try {
         const res = await fetch('https://api.exchangerate-api.com/v4/latest/SAR');
         const data = await res.json();
         if(data && data.rates && data.rates.INR) {
           state.liveRate = data.rates.INR;
+          if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
+          renderAll();
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn("Live rate API timeout/error, retaining default fallback value.");
+      }
 
+      // 3. Bind Firebase Realtime Database listener
       onValue(ref(db, 'fintrack_data'), (snapshot) => {
         const val = snapshot.val();
         if (val) {
@@ -638,14 +650,13 @@
         } else {
           saveData();
         }
-        const liveRateInput = document.getElementById('liveRateInput');
         if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
         renderAll();
       });
     }
 
     window.updateExchangeRate = function(val) {
-      state.liveRate = parseFloat(val) || 24.96;
+      state.liveRate = parseFloat(val) || 25.50;
       saveData();
     };
 
