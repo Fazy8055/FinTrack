@@ -131,9 +131,9 @@
         <section id="sec-overview" class="tab-content space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Liquid Bank Balance</p>
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bank & Cash Balance</p>
               <h3 class="text-2xl font-black text-slate-800 mt-2" id="sumBankBalance">₹0</h3>
-              <p class="text-xs text-slate-500 mt-1">India + Saudi Banks Combined</p>
+              <p class="text-xs text-slate-500 mt-1">India + Saudi Accounts Combined</p>
             </div>
             <div class="bg-red-50 p-5 rounded-xl border border-red-200 shadow-sm">
               <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Total Liabilities (Real-Time)</p>
@@ -148,7 +148,7 @@
             <div class="profit-card p-5 rounded-xl border shadow-sm">
               <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Net Financial Balance</p>
               <h3 class="text-2xl font-black text-emerald-600 mt-2" id="sumNetPosition">₹0</h3>
-              <p class="text-xs text-emerald-700/80 mt-1">Liquid Bank + Savings - Debt</p>
+              <p class="text-xs text-emerald-700/80 mt-1">Liquid Accounts + Savings - Debt</p>
             </div>
           </div>
 
@@ -200,11 +200,35 @@
             </div>
           </div>
 
-          <!-- INDIVIDUAL BANK BALANCE SUMMARY (SHOWN AT LAST / DOWN OF DASHBOARD SUMMARY AFTER ADDING BANK BALANCES AREA) -->
+          <!-- CASH IN HAND SUMMARY -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+              <h3 class="font-bold text-slate-800 flex items-center"><i class="fa-solid fa-wallet text-emerald-600 mr-2"></i> Cash in Hand Balances</h3>
+              <button onclick="openForm('modalBank', 'bankForm', {name: 'Cash in Hand'})" class="px-3 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold text-xs rounded-lg transition">
+                + Add Cash
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="text-slate-400 border-b">
+                    <th class="pb-2">Owner</th>
+                    <th class="pb-2">Currency</th>
+                    <th class="pb-2 text-right">Balance</th>
+                    <th class="pb-2 text-right">In INR (₹)</th>
+                    <th class="pb-2 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="cashTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- INDIVIDUAL BANK BALANCE SUMMARY (SHOWN AT LAST / DOWN OF DASHBOARD SUMMARY) -->
           <div class="bg-slate-900 text-white p-5 rounded-xl shadow-md border border-slate-800 space-y-4">
             <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
               <h3 class="font-extrabold text-sm uppercase tracking-wider text-amber-400 flex items-center">
-                <i class="fa-solid fa-users text-indigo-400 mr-2"></i> Individual Bank Balance Summary
+                <i class="fa-solid fa-users text-indigo-400 mr-2"></i> Individual Bank & Cash Balance Summary
               </h3>
               <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">Real-Time Individual Portfolio</span>
             </div>
@@ -438,7 +462,7 @@
   <!-- Bank Modal -->
   <div id="modalBank" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-      <h3 class="font-bold text-base mb-4">Bank Account Entry</h3>
+      <h3 class="font-bold text-base mb-4">Account Entry</h3>
       <form id="bankForm" onsubmit="saveBankEntry(event)" class="space-y-3 text-xs">
         <input type="hidden" id="bankId">
         
@@ -460,7 +484,7 @@
         </div>
 
         <div>
-          <label class="block font-bold text-slate-600 mb-1">Bank Name</label>
+          <label class="block font-bold text-slate-600 mb-1">Bank / Cash Name</label>
           <select id="bankName" class="w-full p-2 border rounded-lg font-bold text-indigo-900">
             <!-- Populated dynamically -->
           </select>
@@ -473,7 +497,7 @@
 
         <div class="flex justify-end space-x-2 pt-2">
           <button type="button" onclick="closeModal('modalBank')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Save Bank Account</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Save Account</button>
         </div>
       </form>
     </div>
@@ -509,11 +533,11 @@
 
         <!-- REDUCE FROM BANK ACCOUNT OPTION -->
         <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg space-y-1">
-          <label class="block font-bold text-indigo-900">Deduct from Bank Account?</label>
+          <label class="block font-bold text-indigo-900">Deduct from Bank/Cash Account?</label>
           <select id="expenseDeductBankId" class="w-full p-2 border rounded-lg text-xs bg-white">
             <!-- Populated dynamically -->
           </select>
-          <p class="text-[10px] text-indigo-600">Selecting a bank will directly reduce the amount from that account's balance.</p>
+          <p class="text-[10px] text-indigo-600">Selecting an account will directly reduce the amount from its balance.</p>
         </div>
 
         <div class="flex justify-end space-x-2 pt-2">
@@ -557,18 +581,18 @@
         <!-- BANK SETTLEMENT OPTIONS -->
         <div class="p-3 bg-emerald-50 border border-emerald-100 rounded-lg space-y-2">
           <div>
-            <label class="block font-bold text-emerald-900">Deduct from Payer's Bank Account:</label>
+            <label class="block font-bold text-emerald-900">Deduct from Payer's Account:</label>
             <select id="stlPayerBankId" class="w-full p-2 border rounded-lg bg-white">
               <!-- Dynamically populated -->
             </select>
           </div>
           <div>
-            <label class="block font-bold text-emerald-900">Add to Payee's Bank Account:</label>
+            <label class="block font-bold text-emerald-900">Add to Payee's Account:</label>
             <select id="stlPayeeBankId" class="w-full p-2 border rounded-lg bg-white">
               <!-- Dynamically populated -->
             </select>
           </div>
-          <p class="text-[10px] text-emerald-700">Settlement will automatically adjust balances in the selected bank accounts.</p>
+          <p class="text-[10px] text-emerald-700">Settlement will automatically adjust balances in the selected accounts.</p>
         </div>
 
         <div class="flex justify-end space-x-2 pt-2">
@@ -679,12 +703,12 @@
     // PRESET BANK MAPPING AS REQUESTED
     const BANK_PRESETS = {
       Fazy: {
-        INR: ['Federal bank NRE', 'Canara', 'SBI'],
-        SAR: ['Al Inma', 'Al Rajhi', 'SNB', 'Tiqmo']
+        INR: ['Federal bank NRE', 'Canara', 'SBI', 'Cash in Hand'],
+        SAR: ['Al Inma', 'Al Rajhi', 'SNB', 'Tiqmo', 'Cash in Hand']
       },
       Juby: {
-        INR: ['Federal bank NRE', 'Federal Bank NRO', 'SIB', 'PNB', 'SBI'],
-        SAR: ['Al Rajhi', 'SNB', 'Tiqmo']
+        INR: ['Federal bank NRE', 'Federal Bank NRO', 'SIB', 'PNB', 'SBI', 'Cash in Hand'],
+        SAR: ['Al Rajhi', 'SNB', 'Tiqmo', 'Cash in Hand']
       }
     };
 
@@ -820,7 +844,7 @@
       options.forEach(b => {
         const opt = document.createElement('option');
         opt.value = b;
-        opt.textContent = b;
+        opt.textContent = b === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b;
         bankSelect.appendChild(opt);
       });
     };
@@ -948,18 +972,21 @@
       let totINR = 0, totSAR = 0;
       const inTbody = document.getElementById('indianBanksTable'); inTbody.innerHTML = '';
       const saTbody = document.getElementById('saudiBanksTable'); saTbody.innerHTML = '';
+      const cashTbody = document.getElementById('cashTable'); cashTbody.innerHTML = '';
 
-      const indianBanks = (state.banks || []).filter(b => b.currency === 'INR');
-      const saudiBanks = (state.banks || []).filter(b => b.currency === 'SAR');
+      const indianBanks = (state.banks || []).filter(b => b.currency === 'INR' && b.name !== 'Cash in Hand');
+      const saudiBanks = (state.banks || []).filter(b => b.currency === 'SAR' && b.name !== 'Cash in Hand');
+      const cashBalances = (state.banks || []).filter(b => b.name === 'Cash in Hand');
 
       if (indianBanks.length === 0) {
         inTbody.innerHTML = `<tr><td colspan="4" class="py-3 text-center text-slate-400 italic">No Indian banks added.</td></tr>`;
       } else {
         indianBanks.forEach(b => {
           totINR += b.balance;
+          const dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
           inTbody.innerHTML += `<tr>
             <td class="py-2"><span class="px-2 py-0.5 rounded font-bold text-[10px] uppercase ${b.owner==='Fazy'?'bg-indigo-100 text-indigo-700':'bg-teal-100 text-teal-700'}">${b.owner}</span></td>
-            <td class="py-2 font-semibold">${b.name}</td>
+            <td class="py-2 font-semibold">${dispName}</td>
             <td class="py-2 text-right font-bold">₹${b.balance.toLocaleString()}</td>
             <td class="py-2 text-center text-slate-400">
               <button onclick="editEntry('banks', ${b.id})" class="hover:text-indigo-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -973,13 +1000,36 @@
       } else {
         saudiBanks.forEach(b => {
           totSAR += b.balance;
+          const dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
           saTbody.innerHTML += `<tr>
             <td class="py-2"><span class="px-2 py-0.5 rounded font-bold text-[10px] uppercase ${b.owner==='Fazy'?'bg-indigo-100 text-indigo-700':'bg-teal-100 text-teal-700'}">${b.owner}</span></td>
-            <td class="py-2 font-semibold">${b.name}</td>
+            <td class="py-2 font-semibold">${dispName}</td>
             <td class="py-2 text-right font-bold">${b.balance.toLocaleString()} SAR</td>
             <td class="py-2 text-right text-slate-500">₹${Math.round(b.balance * state.liveRate).toLocaleString()}</td>
             <td class="py-2 text-center text-slate-400">
               <button onclick="editEntry('banks', ${b.id})" class="hover:text-amber-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteEntry('banks', ${b.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
+        });
+      }
+
+      if (cashBalances.length === 0) {
+        cashTbody.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-400 italic">No cash in hand logged.</td></tr>`;
+      } else {
+        cashBalances.forEach(b => {
+          if(b.currency === 'INR') totINR += b.balance;
+          else totSAR += b.balance;
+          
+          let balText = b.currency === 'SAR' ? `${b.balance.toLocaleString()} SAR` : `₹${b.balance.toLocaleString()}`;
+          let inrText = b.currency === 'SAR' ? `₹${Math.round(b.balance * state.liveRate).toLocaleString()}` : `₹${b.balance.toLocaleString()}`;
+          
+          cashTbody.innerHTML += `<tr>
+            <td class="py-2"><span class="px-2 py-0.5 rounded font-bold text-[10px] uppercase ${b.owner==='Fazy'?'bg-indigo-100 text-indigo-700':'bg-teal-100 text-teal-700'}">${b.owner}</span></td>
+            <td class="py-2 font-semibold text-slate-500">${b.currency}</td>
+            <td class="py-2 text-right font-bold">${balText}</td>
+            <td class="py-2 text-right text-slate-500">${inrText}</td>
+            <td class="py-2 text-center text-slate-400">
+              <button onclick="editEntry('banks', ${b.id})" class="hover:text-emerald-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
               <button onclick="deleteEntry('banks', ${b.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
             </td></tr>`;
         });
@@ -1009,14 +1059,15 @@
 
         let bankItemsHtml = '';
         if(userBanks.length === 0) {
-          bankItemsHtml = `<p class="text-xs text-slate-400 italic">No bank accounts added for ${person}.</p>`;
+          bankItemsHtml = `<p class="text-xs text-slate-400 italic">No accounts added for ${person}.</p>`;
         } else {
           userBanks.forEach(b => {
+            const dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
             if(b.currency === 'INR') {
               userInrTotal += b.balance;
               bankItemsHtml += `
                 <div class="flex justify-between items-center text-xs py-1 border-b border-slate-800">
-                  <span class="text-slate-300 font-medium">${b.name} <span class="text-[10px] text-indigo-400">(INR)</span></span>
+                  <span class="text-slate-300 font-medium">${dispName} <span class="text-[10px] text-indigo-400">(INR)</span></span>
                   <span class="font-bold text-white">₹${b.balance.toLocaleString()}</span>
                 </div>`;
             } else {
@@ -1024,7 +1075,7 @@
               const inrEq = Math.round(b.balance * state.liveRate);
               bankItemsHtml += `
                 <div class="flex justify-between items-center text-xs py-1 border-b border-slate-800">
-                  <span class="text-slate-300 font-medium">${b.name} <span class="text-[10px] text-amber-400">(SAR)</span></span>
+                  <span class="text-slate-300 font-medium">${dispName} <span class="text-[10px] text-amber-400">(SAR)</span></span>
                   <span class="font-bold text-amber-300">${b.balance.toLocaleString()} SAR <span class="text-[10px] text-slate-400">(≈ ₹${inrEq.toLocaleString()})</span></span>
                 </div>`;
             }
@@ -1140,11 +1191,12 @@
 
       const userBanks = (state.banks || []).filter(b => b.owner === payer && b.currency === currency);
       
-      bankSelect.innerHTML = '<option value="">-- Do Not Deduct From Bank --</option>';
+      bankSelect.innerHTML = '<option value="">-- Do Not Deduct From Bank/Cash --</option>';
       userBanks.forEach(b => {
         const opt = document.createElement('option');
         opt.value = b.id;
-        opt.textContent = `${b.name} (Current: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
+        let dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
+        opt.textContent = `${dispName} (Current: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
         bankSelect.appendChild(opt);
       });
     };
@@ -1235,7 +1287,8 @@
       payerBanks.forEach(b => {
         const opt = document.createElement('option');
         opt.value = b.id;
-        opt.textContent = `${b.name} (Bal: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
+        let dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
+        opt.textContent = `${dispName} (Bal: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
         payerBankSelect.appendChild(opt);
       });
 
@@ -1243,7 +1296,8 @@
       payeeBanks.forEach(b => {
         const opt = document.createElement('option');
         opt.value = b.id;
-        opt.textContent = `${b.name} (Bal: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
+        let dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
+        opt.textContent = `${dispName} (Bal: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
         payeeBankSelect.appendChild(opt);
       });
     };
