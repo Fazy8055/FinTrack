@@ -77,6 +77,7 @@
             <button onclick="switchTab('expenses')" id="top-tab-expenses" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Expenses</button>
             <button onclick="switchTab('liabilities')" id="top-tab-liabilities" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Liabilities</button>
             <button onclick="switchTab('gold-sip')" id="top-tab-gold-sip" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Gold & SIP</button>
+            <button onclick="switchTab('transfers')" id="top-tab-transfers" class="topnav-btn px-4 py-1.5 rounded text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition">Transfers</button>
           </nav>
         </div>
         
@@ -120,6 +121,9 @@
           </button>
           <button onclick="switchTab('gold-sip')" id="side-tab-gold-sip" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3 transition">
             <i class="fa-solid fa-coins w-5 text-center"></i><span>Gold & SIP Investments</span>
+          </button>
+          <button onclick="switchTab('transfers')" id="side-tab-transfers" class="w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white flex items-center space-x-3 transition">
+            <i class="fa-solid fa-money-bill-transfer w-5 text-center"></i><span>Bank & Cash Transfers</span>
           </button>
         </nav>
       </aside>
@@ -361,6 +365,30 @@
               </button>
             </div>
 
+            <!-- COMMON TODAY'S GOLD RATE UPDATE PANEL -->
+            <div class="bg-white/90 p-4 rounded-xl border border-amber-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-amber-900 uppercase"><i class="fa-solid fa-tags text-amber-600 mr-1"></i> Common Today's Rate Update:</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Purity Toggle Buttons -->
+                <div class="inline-flex rounded-lg border border-amber-300 bg-amber-50 p-1" id="commonPurityToggle">
+                  <button type="button" onclick="setCommonGoldPurity('24K')" id="commonPurity24K" class="px-3 py-1 text-xs font-bold rounded-md bg-amber-500 text-white transition">24K</button>
+                  <button type="button" onclick="setCommonGoldPurity('22K')" id="commonPurity22K" class="px-3 py-1 text-xs font-bold rounded-md text-amber-900 hover:bg-amber-100 transition">22K</button>
+                  <button type="button" onclick="setCommonGoldPurity('18K')" id="commonPurity18K" class="px-3 py-1 text-xs font-bold rounded-md text-amber-900 hover:bg-amber-100 transition">18K</button>
+                </div>
+                <!-- Rate Input Box -->
+                <div class="flex items-center space-x-1">
+                  <span class="text-xs font-bold text-slate-600">₹</span>
+                  <input type="number" id="commonTodayRateInput" placeholder="Enter rate..." class="w-28 px-2 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-bold text-amber-900 outline-none focus:border-amber-500">
+                </div>
+                <!-- Apply Button -->
+                <button type="button" onclick="applyCommonGoldRate()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg shadow transition">
+                  Update All <span id="currentCommonPurityLabel">(24K)</span>
+                </button>
+              </div>
+            </div>
+
             <!-- SUMMARY CARDS -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 bg-white/80 p-4 rounded-xl border border-amber-200/60 shadow-xs">
               <div>
@@ -430,6 +458,36 @@
                   </tr>
                 </thead>
                 <tbody id="sipTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: BANK & CASH TRANSFERS -->
+        <section id="sec-transfers" class="tab-content hidden space-y-6">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-4">
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Bank & Cash Transfers</h3>
+                <p class="text-xs text-slate-500">Record transfers between your accounts or cash in hand balances.</p>
+              </div>
+              <button onclick="openTransferModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow">
+                + New Transfer
+              </button>
+            </div>
+            <div class="overflow-x-auto border rounded-lg border-slate-200">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                    <th class="p-3">Date</th>
+                    <th class="p-3">From Account</th>
+                    <th class="p-3">To Account</th>
+                    <th class="p-3">Amount</th>
+                    <th class="p-3">Notes</th>
+                    <th class="p-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="transfersTable" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
               </table>
             </div>
           </div>
@@ -528,21 +586,72 @@
               <option value="INR">INR (₹)</option>
             </select>
           </div>
-          <div><label class="block font-bold text-slate-600 mb-1">Amount</label><input type="number" step="0.01" id="expenseAmount" required class="w-full p-2 border rounded-lg"></div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Amount</label>
+            <input type="number" step="0.01" id="expenseAmount" required class="w-full p-2 border rounded-lg" oninput="document.getElementById('cashbackManualEdit').value='false'; handleTiqmoCashback();">
+          </div>
         </div>
 
         <!-- REDUCE FROM BANK ACCOUNT OPTION -->
         <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg space-y-1">
           <label class="block font-bold text-indigo-900">Deduct from Bank/Cash Account?</label>
-          <select id="expenseDeductBankId" class="w-full p-2 border rounded-lg text-xs bg-white">
+          <select id="expenseDeductBankId" class="w-full p-2 border rounded-lg text-xs bg-white" onchange="handleTiqmoCashback()">
             <!-- Populated dynamically -->
           </select>
           <p class="text-[10px] text-indigo-600">Selecting an account will directly reduce the amount from its balance.</p>
         </div>
 
+        <!-- TIQMO CASHBACK WRAPPER -->
+        <div id="cashbackWrapper" class="hidden mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
+          <label class="block font-bold text-amber-900">Tiqmo 1% Cashback (Auto-calc)</label>
+          <input type="number" step="0.01" id="expenseCashback" class="w-full p-2 border border-amber-300 rounded-lg text-xs font-bold" oninput="document.getElementById('cashbackManualEdit').value = 'true'">
+          <input type="hidden" id="cashbackManualEdit" value="false">
+          <p class="text-[10px] text-amber-700">This amount reduces the net deduction. Edit manually if shop didn't give full cashback.</p>
+        </div>
+
         <div class="flex justify-end space-x-2 pt-2">
           <button type="button" onclick="closeModal('modalExpense')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
           <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Transfer Modal -->
+  <div id="modalTransfer" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+      <h3 class="font-bold text-base mb-4">Transfer Money</h3>
+      <form id="transferForm" onsubmit="saveTransfer(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="transferId">
+        <div><label class="block font-bold text-slate-600 mb-1">Date</label><input type="date" id="transferDate" required class="w-full p-2 border rounded-lg"></div>
+        
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">From Account (Deduct)</label>
+          <select id="transferFrom" required class="w-full p-2 border rounded-lg font-bold bg-red-50 text-red-900">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">To Account (Add)</label>
+          <select id="transferTo" required class="w-full p-2 border rounded-lg font-bold bg-emerald-50 text-emerald-900">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Transfer Amount</label>
+          <input type="number" step="0.01" id="transferAmount" required class="w-full p-2 border rounded-lg font-bold">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Notes / Reference</label>
+          <input type="text" id="transferNotes" class="w-full p-2 border rounded-lg">
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modalTransfer')" class="px-4 py-2 bg-slate-200 font-bold rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg">Execute Transfer</button>
         </div>
       </form>
     </div>
@@ -645,7 +754,7 @@
         <input type="hidden" id="goldId">
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block font-bold text-slate-600 mb-1">Date</label><input type="text" id="goldDate" required class="w-full p-2 border rounded-lg"></div>
-          <div><label class="block font-bold text-slate-600 mb-1">Purity</label><select id="goldPurity" class="w-full p-2 border rounded-lg"><option value="24K">24 K</option><option value="22K">22 K</option></select></div>
+          <div><label class="block font-bold text-slate-600 mb-1">Purity</label><select id="goldPurity" class="w-full p-2 border rounded-lg"><option value="24K">24 K</option><option value="22K">22 K</option><option value="18K">18 K</option></select></div>
           <div><label class="block font-bold text-slate-600 mb-1">Grams (24K)</label><input type="number" step="0.1" id="goldGrams24" required class="w-full p-2 border rounded-lg"></div>
           <div><label class="block font-bold text-slate-600 mb-1">Grams (22K)</label><input type="number" step="0.1" id="goldGrams22" required class="w-full p-2 border rounded-lg"></div>
           <div><label class="block font-bold text-slate-600 mb-1">Purchase SAR</label><input type="number" id="goldSar" required class="w-full p-2 border rounded-lg"></div>
@@ -735,7 +844,55 @@
         { id: 1, name: 'Nippon Small Cap SIP', category: 'Equity SIP', monthly: 10000, value: 185000 }
       ],
       expenses: { '2026-08': [] },
-      settlements: { '2026-08': [] }
+      settlements: { '2026-08': [] },
+      transfers: []
+    };
+
+    let activeCommonPurity = '24K';
+
+    window.setCommonGoldPurity = function(purity) {
+      activeCommonPurity = purity;
+      ['24K', '22K', '18K'].forEach(p => {
+        const btn = document.getElementById(`commonPurity${p}`);
+        if(btn) {
+          if(p === purity) {
+            btn.className = "px-3 py-1 text-xs font-bold rounded-md bg-amber-500 text-white transition";
+          } else {
+            btn.className = "px-3 py-1 text-xs font-bold rounded-md text-amber-900 hover:bg-amber-100 transition";
+          }
+        }
+      });
+      document.getElementById('currentCommonPurityLabel').innerText = `(${purity})`;
+      
+      const matchingGold = (state.gold || []).find(g => g.purity === purity);
+      const input = document.getElementById('commonTodayRateInput');
+      if(input) {
+        input.value = matchingGold ? matchingGold.todayRate : '';
+      }
+    };
+
+    window.applyCommonGoldRate = function() {
+      const rateInput = document.getElementById('commonTodayRateInput');
+      const newRate = parseFloat(rateInput.value);
+      if(isNaN(newRate)) {
+        alert("Please enter a valid today's gold rate.");
+        return;
+      }
+
+      let updatedCount = 0;
+      (state.gold || []).forEach(g => {
+        if(g.purity === activeCommonPurity) {
+          g.todayRate = newRate;
+          updatedCount++;
+        }
+      });
+
+      if(updatedCount === 0) {
+        alert(`No gold purchase entries found with purity ${activeCommonPurity}.`);
+      } else {
+        alert(`Successfully updated today's rate to ₹${newRate.toLocaleString()} for ${updatedCount} entry/entries of purity ${activeCommonPurity}.`);
+      }
+      saveData();
     };
 
     function normalizeState(val) {
@@ -747,6 +904,7 @@
       state.debts = Array.isArray(val.debts) ? val.debts : (val.debts ? Object.values(val.debts) : []);
       state.gold = Array.isArray(val.gold) ? val.gold : (val.gold ? Object.values(val.gold) : []);
       state.sips = Array.isArray(val.sips) ? val.sips : (val.sips ? Object.values(val.sips) : []);
+      state.transfers = Array.isArray(val.transfers) ? val.transfers : (val.transfers ? Object.values(val.transfers) : []);
       state.expenses = val.expenses || {};
       state.settlements = val.settlements || {};
 
@@ -768,6 +926,7 @@
     async function initFirebase() {
       const liveRateInput = document.getElementById('liveRateInput');
       if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
+      setCommonGoldPurity('24K');
       renderAll();
 
       try {
@@ -790,6 +949,7 @@
           saveData();
         }
         if(liveRateInput) liveRateInput.value = state.liveRate.toFixed(2);
+        setCommonGoldPurity(activeCommonPurity);
         renderAll();
       });
     }
@@ -966,6 +1126,7 @@
       renderExpenses();
       renderDebts();
       renderGoldAndSip();
+      renderTransfers();
     }
 
     function renderOverview() {
@@ -1199,12 +1360,39 @@
         opt.textContent = `${dispName} (Current: ${b.currency === 'SAR' ? b.balance + ' SAR' : '₹' + b.balance.toLocaleString()})`;
         bankSelect.appendChild(opt);
       });
+
+      handleTiqmoCashback(); // Trigger cashback check
+    };
+
+    window.handleTiqmoCashback = function() {
+      const deductBankId = document.getElementById('expenseDeductBankId').value;
+      const wrapper = document.getElementById('cashbackWrapper');
+      const cbInput = document.getElementById('expenseCashback');
+      const isManual = document.getElementById('cashbackManualEdit').value === 'true';
+
+      if(deductBankId) {
+        const bank = state.banks.find(b => String(b.id) === String(deductBankId));
+        if(bank && bank.name.toLowerCase().includes('tiqmo')) {
+          wrapper.classList.remove('hidden');
+          if(!isManual) {
+            const amt = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            cbInput.value = (amt * 0.01).toFixed(2);
+          }
+          return;
+        }
+      }
+      wrapper.classList.add('hidden');
+      cbInput.value = '0';
+      document.getElementById('cashbackManualEdit').value = 'false';
     };
 
     window.openNewExpenseModal = function() {
       document.getElementById('expenseForm').reset();
       document.getElementById('expenseId').value = '';
       document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('cashbackManualEdit').value = 'false';
+      document.getElementById('expenseCashback').value = '0';
+      document.getElementById('cashbackWrapper').classList.add('hidden');
       updateExpenseBankOptions();
       document.getElementById('modalExpense').classList.remove('hidden');
     };
@@ -1219,6 +1407,10 @@
       document.getElementById('expenseDesc').value = exp.desc;
       document.getElementById('expenseCurrency').value = exp.currency;
       document.getElementById('expenseAmount').value = exp.amount;
+      
+      document.getElementById('expenseCashback').value = exp.cashback || 0;
+      document.getElementById('cashbackManualEdit').value = exp.cashback !== undefined ? 'true' : 'false';
+      
       updateExpenseBankOptions();
       document.getElementById('modalExpense').classList.remove('hidden');
     };
@@ -1232,6 +1424,7 @@
       const id = idStr ? parseInt(idStr) : Date.now();
       const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
       const deductBankId = document.getElementById('expenseDeductBankId').value;
+      const cashbackAmount = parseFloat(document.getElementById('expenseCashback').value) || 0;
 
       const item = {
         id: id,
@@ -1239,14 +1432,16 @@
         desc: document.getElementById('expenseDesc').value,
         paidBy: document.getElementById('expensePaidBy').value,
         currency: document.getElementById('expenseCurrency').value,
-        amount: amount
+        amount: amount,
+        cashback: cashbackAmount
       };
 
-      // DEDUCT FROM SELECTED BANK
+      // DEDUCT FROM SELECTED BANK (Amount - Cashback)
       if(deductBankId) {
         const bank = state.banks.find(b => String(b.id) === String(deductBankId));
         if(bank) {
-          bank.balance = Math.max(0, bank.balance - amount);
+          const actualDeduction = amount - cashbackAmount;
+          bank.balance = Math.max(0, bank.balance - actualDeduction);
         }
       }
 
@@ -1479,7 +1674,7 @@
 
           gTbody.innerHTML += `<tr>
             <td class="p-2.5 font-bold">${g.date}</td>
-            <td class="p-2.5 text-center font-bold text-amber-700">${totalGrams}g</td>
+            <td class="p-2.5 text-center font-bold text-amber-700">${totalGrams}g <span class="text-[10px] text-slate-500">(${g.purity || '24K'})</span></td>
             <td class="p-2.5 text-right font-semibold">${g.sar.toLocaleString()} SAR</td>
             <td class="p-2.5 text-right text-slate-500">${g.convRate}</td>
             <td class="p-2.5 text-right font-bold bg-amber-50/50 border-l border-amber-100">₹${purchaseDayInr.toLocaleString()}</td>
@@ -1529,6 +1724,99 @@
         });
       }
     }
+
+    // TRANSFER FUNCTIONS
+    window.openTransferModal = function() {
+      document.getElementById('transferForm').reset();
+      document.getElementById('transferId').value = '';
+      document.getElementById('transferDate').value = new Date().toISOString().split('T')[0];
+      updateTransferOptions();
+      document.getElementById('modalTransfer').classList.remove('hidden');
+    };
+
+    window.updateTransferOptions = function() {
+      const fromSelect = document.getElementById('transferFrom');
+      const toSelect = document.getElementById('transferTo');
+      let opts = '<option value="">-- Select Account --</option>';
+      
+      state.banks.forEach(b => {
+        let dispName = b.name === 'Tiqmo' ? 'Tiqmo (1% Cashback)' : b.name;
+        opts += `<option value="${b.id}">${b.owner} - ${dispName} (${b.currency} ${b.balance})</option>`;
+      });
+      
+      fromSelect.innerHTML = opts;
+      toSelect.innerHTML = opts;
+    };
+
+    window.saveTransfer = function(e) {
+      e.preventDefault();
+      const idStr = document.getElementById('transferId').value;
+      const fromId = document.getElementById('transferFrom').value;
+      const toId = document.getElementById('transferTo').value;
+      const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+
+      if(!fromId || !toId || fromId === toId) {
+        alert("Please select valid different accounts to transfer between.");
+        return;
+      }
+
+      const fromBank = state.banks.find(b => String(b.id) === String(fromId));
+      const toBank = state.banks.find(b => String(b.id) === String(toId));
+
+      if(fromBank.currency !== toBank.currency) {
+        if(!confirm("Warning: You are transferring between accounts with different currencies (SAR/INR). Ensure the amount is correct. Proceed?")) return;
+      }
+
+      // Deduct from 'From' account, Add to 'To' account
+      fromBank.balance -= amount;
+      toBank.balance += amount;
+
+      const tData = {
+        id: idStr ? parseInt(idStr) : Date.now(),
+        date: document.getElementById('transferDate').value,
+        fromId: fromId,
+        toId: toId,
+        fromName: `${fromBank.owner} - ${fromBank.name} (${fromBank.currency})`,
+        toName: `${toBank.owner} - ${toBank.name} (${toBank.currency})`,
+        amount: amount,
+        notes: document.getElementById('transferNotes').value
+      };
+
+      if(!state.transfers) state.transfers = [];
+      state.transfers.push(tData);
+
+      closeModal('modalTransfer');
+      saveData();
+    };
+
+    function renderTransfers() {
+      const tbody = document.getElementById('transfersTable');
+      tbody.innerHTML = '';
+      if (!state.transfers || state.transfers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">No transfers logged yet.</td></tr>`;
+        return;
+      }
+      state.transfers.forEach(t => {
+        tbody.innerHTML += `<tr>
+          <td class="p-3">${t.date}</td>
+          <td class="p-3 font-semibold text-red-600">${t.fromName}</td>
+          <td class="p-3 font-semibold text-emerald-600">${t.toName}</td>
+          <td class="p-3 font-bold">${t.amount}</td>
+          <td class="p-3 text-slate-500">${t.notes || '-'}</td>
+          <td class="p-3 text-center text-slate-400">
+            <button onclick="deleteTransfer(${t.id})" class="hover:text-red-600 mx-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+    }
+
+    window.deleteTransfer = function(id) {
+      if(confirm('Delete this transfer log? (Note: This will not automatically revert the bank balances. You may need to manually adjust them.)')) {
+        if(!state.transfers) state.transfers = [];
+        state.transfers = state.transfers.filter(t => String(t.id) !== String(id));
+        saveData();
+      }
+    };
 
     window.onload = initFirebase;
   </script>
